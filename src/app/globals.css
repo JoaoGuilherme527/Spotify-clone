@@ -1,0 +1,39 @@
+@import "tailwindcss";
+* {
+    p,
+    a,
+    h1,
+    h2,
+    h3 {
+        padding: 0 !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }
+}
+
+html {
+    font-size: 16px;
+}
+
+@media (max-width: 768px) {
+    html {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    html {
+        font-size: 14px;
+    }
+}
+
+.trackBarHover:hover {
+    #trackProgress {
+        position: relative;
+        @apply bg-green-500;
+    }
+    #trackProgress::before {
+        content: "";
+        @apply bg-white w-3 h-3 absolute top-[-4px] right-[-4px] rounded-full;
+    }
+}
