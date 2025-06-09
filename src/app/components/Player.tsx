@@ -22,9 +22,15 @@ export default function PlayerFooter() {
     const [trackPosition, setTrackPosition] = useState(0)
     const [trackDuration, setTrackDuration] = useState(0)
     const [track, setTrack] = useState<Track | null>(null)
+    const [isShuffle, setIsShuffle] = useState<boolean | null>()
+    const [repeatMode, setRepeatMode] = useState<number>(0)
     const trackBarRef = useRef<HTMLDivElement>(null)
     const intervalRef = useRef<NodeJS.Timeout | null>(null)
     const isSeeking = useRef(false)
+    const [client_token, setToken] = useState<string | null>("")
+    const nextRepeatMode = (repeatMode + 1) % 3
+    const repeatModes = ["off", "context", "track"]
+    const apiMode = repeatModes[nextRepeatMode]
 
     const getCurrentTrackPositionWidth = (ms: number) => {
         if (!trackDuration) return "0%"
@@ -44,7 +50,7 @@ export default function PlayerFooter() {
 
     useEffect(() => {
         const token = new URLSearchParams(window.location.search).get("access_token")
-
+        setToken(token)
         if (!token) return
 
         const script = document.createElement("script")
@@ -71,17 +77,19 @@ export default function PlayerFooter() {
                     },
                     body: JSON.stringify({
                         device_ids: [device_id],
-                        play: true,
+                        play: !isPaused,
                     }),
                 })
             })
 
-            playerInstance.addListener("player_state_changed", (state) => {
+            playerInstance.addListener("player_state_changed", (state: Spotify.WebPlaybackState) => {
                 if (!state) return
                 setTrackPosition(state.position)
                 setTrackDuration(state.duration)
                 setIsPaused(state.paused)
                 setTrack(state.track_window.current_track)
+                setIsShuffle(state.shuffle)
+                setRepeatMode(state.repeat_mode)
             })
 
             playerInstance.connect()
@@ -123,6 +131,41 @@ export default function PlayerFooter() {
         player.nextTrack()
     }
 
+    async function onShuffle() {
+        if (!client_token) return
+        try {
+            const url = !isShuffle
+                ? "https://api.spotify.com/v1/me/player/shuffle?state=true"
+                : "https://api.spotify.com/v1/me/player/shuffle?state=false"
+
+            await fetch(url, {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${client_token}`,
+                    "Content-Type": "application/json",
+                },
+            })
+            setIsShuffle(!isShuffle)
+        } catch (err) {
+            console.error("Erro ao ativar shuffle:", err)
+        }
+    }
+
+    async function onRepeat() {
+        try {
+            await fetch(`https://api.spotify.com/v1/me/player/repeat?state=${apiMode}`, {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${client_token}`,
+                },
+            })
+
+            setRepeatMode(nextRepeatMode)
+        } catch (error) {
+            console.error("Erro ao alterar repeat mode:", error)
+        }
+    }
+
     const handleMouseDown = (e: React.MouseEvent) => {
         isSeeking.current = true
         onSeek(e.clientX)
@@ -140,7 +183,7 @@ export default function PlayerFooter() {
     }
 
     return (
-        <div className="bg-zinc-950 w-full flex items-center p-3 justify-between">
+        <div className="bg-zinc-950 flex items-center p-3 justify-between">
             <div className="flex-1 items-center gap-3 flex">
                 <img src={track?.album.images[0]?.url} alt={track?.name} width={56} height={56} className="rounded bg-zinc-50/5 border-0" />
                 <div className="flex flex-col justify-center text-white">
@@ -151,8 +194,14 @@ export default function PlayerFooter() {
 
             <div className="flex-2 flex flex-col justify-center gap-1">
                 <div className="flex items-center justify-center gap-5">
-                    <button>
-                        <Shuffle size={16} opacity={"60%"} color="white" />
+                    <button onClick={onShuffle} className={`${isShuffle ?? "isShuffleActive"} cursor-pointer flex-col items-center flex gap-1 `}>
+                        <Shuffle
+                            size={16}
+                            color={`${isShuffle ? "oklch(72.3% 0.219 149.579)" : "white"}`}
+                            opacity={isShuffle ? "100%" : "60%"}
+                            className="hover:scale-110 hover:opacity-100"
+                        />
+                        {isShuffle && <div className="bg-green-500 w-1 h-1 rounded-full" />}
                     </button>
                     <button onClick={playPrevious} className="cursor-pointer transition-all">
                         <svg
@@ -196,15 +245,38 @@ export default function PlayerFooter() {
                             ></path>
                         </svg>
                     </button>
-                    <button>
-                        <RotateCw size={16} color="white" opacity={"60%"} />
+                    <button onClick={onRepeat} className={`cursor-pointer text-green-500 flex-col items-center flex gap-1 relative`}>
+                        <RotateCw
+                            size={18}
+                            color={repeatMode === 1 || repeatMode === 2 ? `oklch(72.3% 0.219 149.579)` : "white"}
+                            opacity={repeatMode === 0 ? "60%" : "100%"}
+                            className={`hover:scale-110 transition-all`}
+                        />
+                        {(repeatMode === 1 || repeatMode === 2) && <div className="bg-green-500 w-1 h-1 rounded-full" />}
+                        {repeatMode === 2 && (
+                            <span
+                                style={{
+                                    color: "green",
+                                    background: "#09090b",
+                                    fontWeight: "700",
+                                    fontSize: "15px",
+                                }}
+                                className="bg-zinc-950 rounded-2xl font-bold absolute top-[-8px] left-1/2 translate-x-[-50%]"
+                            >
+                                1
+                            </span>
+                        )}
                     </button>
                 </div>
 
-                <div className="w-full text-white/75 font-extrabold flex items-center gap-4 text-xs px-8 trackBarHover">
+                <div className=" text-white/75 font-extrabold flex items-center gap-4 text-xs px-8 ">
                     <p className="text-right">{formatMillisToMinutesSeconds(trackPosition)}</p>
 
-                    <div className="flex-1 bg-white/20 h-1 rounded relative cursor-pointer" ref={trackBarRef} onMouseDown={handleMouseDown}>
+                    <div
+                        className="flex-1 w-full bg-white/20 h-[6px] rounded relative cursor-pointer trackBarHover"
+                        ref={trackBarRef}
+                        onMouseDown={handleMouseDown}
+                    >
                         <div
                             id="trackProgress"
                             style={{width: getCurrentTrackPositionWidth(trackPosition)}}

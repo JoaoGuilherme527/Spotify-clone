@@ -5,6 +5,8 @@ export async function GET() {
     'streaming',
     'user-read-email',
     'user-read-private',
+    'user-modify-playback-state',
+    'user-read-playback-state'
   ].join(' ');
 
   const params = new URLSearchParams({

@@ -23,12 +23,10 @@ export async function GET(req: NextRequest) {
           Authorization: `Basic ${credentials}`,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-      }
-    );
-
-    const { access_token, refresh_token, expires_in } = res.data;
+      })
+    const sdkToken = res.data;
     const url = new URL('/dashboard', req.url);
-    url.searchParams.set('access_token', access_token);
+    url.searchParams.set('access_token', sdkToken.access_token);
     return NextResponse.redirect(url.toString());
   } catch (error: any) {
     return NextResponse.json({ error: error.response?.data || error.message }, { status: 500 });
