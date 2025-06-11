@@ -2,11 +2,11 @@ import {CssBaseline, GeistProvider} from "@geist-ui/core"
 import PlayerFooter from "./Player"
 import {HeroUIProvider} from "@heroui/react"
 import Aside from "./Aside"
-import {GetAccessToken} from "@/lib/actions"
+import {GetAccessToken, GetUserAlbum} from "@/lib/actions"
 
 export default async function Dashboard() {
     const token = await GetAccessToken()
-
+    const albums = await GetUserAlbum()
     return (
         <div className="h-screen overflow-y-hidden flex flex-col bg-zinc-950 ">
             <header className="h-12"></header>

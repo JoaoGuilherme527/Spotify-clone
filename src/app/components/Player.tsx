@@ -1,14 +1,10 @@
 "use client"
 
 import SpotifyIcon from "@/icons"
+import { DeleteTrackForUser, SaveTrackForUser } from "@/lib/spotifyActions"
+import {Track} from "@/typings"
 import {PauseFill, PlayFill} from "@geist-ui/icons"
 import {useEffect, useRef, useState} from "react"
-
-interface Track {
-    name: string
-    artists: {name: string}[]
-    album: {images: {url: string}[]}
-}
 
 function formatMillisToMinutesSeconds(ms: number): string {
     const totalSeconds = Math.floor(ms / 1000)
@@ -22,12 +18,13 @@ export default function PlayerFooter({token}: {token: string}) {
     const [isPaused, setIsPaused] = useState(true)
     const [trackPosition, setTrackPosition] = useState(0)
     const [trackDuration, setTrackDuration] = useState(0)
-    const [track, setTrack] = useState<Track | null>(null)
+    const [trackState, setTrackState] = useState<Spotify.WebPlaybackTrack | null>(null)
     const [isShuffle, setIsShuffle] = useState<boolean | null>()
     const [repeatMode, setRepeatMode] = useState<number>(0)
-    const [client_token, setToken] = useState<string | null>(token)
+    const [client_token, setToken] = useState<string>(token)
     const [volumePercentage, setVolumePercentage] = useState<number | null>(null)
     const [isMuted, setIsMuted] = useState<boolean | null>(volumePercentage && volumePercentage <= 0 ? true : false)
+    const [isTrackSaved, setIsTrackSaved] = useState<boolean>(false)
     const trackBarRef = useRef<HTMLDivElement>(null)
     const volumeBarRef = useRef<HTMLDivElement>(null)
     const intervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -63,8 +60,6 @@ export default function PlayerFooter({token}: {token: string}) {
     }
 
     useEffect(() => {
-        // const token = new URLSearchParams(window.location.search).get("access_token")
-        // setToken(token)
         if (!token) return
 
         const script = document.createElement("script")
@@ -96,17 +91,27 @@ export default function PlayerFooter({token}: {token: string}) {
                 })
             })
 
-            playerInstance.addListener("player_state_changed", (state: Spotify.WebPlaybackState) => {
+            playerInstance.addListener("player_state_changed", async (state: Spotify.WebPlaybackState) => {
                 if (!state) return
                 setTrackPosition(state.position)
                 setTrackDuration(state.duration)
                 setIsPaused(state.paused)
-                setTrack(state.track_window.current_track)
+                setTrackState(state.track_window.current_track)
                 setIsShuffle(state.shuffle)
                 setRepeatMode(state.repeat_mode)
                 playerInstance.getVolume().then((volume) => {
                     setVolumePercentage(volume * 100)
                 })
+
+                const response = await fetch(`https://api.spotify.com/v1/me/tracks/contains?ids=${state.track_window.current_track.id}`, {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                })
+                const isSavedData = await response.json()
+                setIsTrackSaved(isSavedData[0])
             })
 
             playerInstance.connect()
@@ -223,22 +228,42 @@ export default function PlayerFooter({token}: {token: string}) {
         document.addEventListener("mouseup", handleMouseUp)
     }
 
+    const handleSaveTrackForUser = () => {
+        if (!trackState) return
+        if (isTrackSaved) {
+            DeleteTrackForUser([trackState.id as string], client_token)
+        } else {
+            SaveTrackForUser([trackState.id as string], client_token)
+        }
+        setIsTrackSaved(!isTrackSaved)
+    }
+
     return (
         <div className="bg-zinc-950 flex items-center p-3 gap-3 justify-between">
-            <div className="flex-1 items-center gap-3 flex">
-                {track ? (
+            <div className="flex-1 items-center gap-4 flex">
+                {trackState ? (
                     <>
                         <img
-                            src={track?.album.images[0]?.url}
-                            alt={track?.name}
+                            src={trackState?.album.images[0]?.url}
+                            alt={trackState?.name}
                             width={56}
                             height={56}
                             className="rounded bg-zinc-50/5 border-0 w-14"
                         />
                         <div className="flex flex-col justify-center text-white">
-                            <p className="text-sm">{track?.name}</p>
-                            <p className="text-xs opacity-50">{track?.artists.map((artist) => artist.name).join(", ")}</p>
+                            <p className="text-sm">{trackState?.name}</p>
+                            <p className="text-xs opacity-50">{trackState?.artists.map((artist) => artist.name).join(", ")}</p>
                         </div>
+                        <button
+                            onClick={handleSaveTrackForUser}
+                            className="hover:scale-110 relative cursor-pointer flex-col items-center flex"
+                        >
+                            <SpotifyIcon
+                                icon="Saved"
+                                variant={isTrackSaved}
+                                color={isTrackSaved ? "oklch(72.3% 0.219 149.579)" : "#99a1af"}
+                            />
+                        </button>
                     </>
                 ) : (
                     <>
