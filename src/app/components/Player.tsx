@@ -1,6 +1,7 @@
 "use client"
 
-import {PauseFill, PlayFill, RotateCw, Shuffle} from "@geist-ui/icons"
+import SpotifyIcon from "@/icons"
+import {PauseFill, PlayFill} from "@geist-ui/icons"
 import {useEffect, useRef, useState} from "react"
 
 interface Track {
@@ -16,7 +17,7 @@ function formatMillisToMinutesSeconds(ms: number): string {
     return `${minutes}:${seconds.toString().padStart(2, "0")}`
 }
 
-export default function PlayerFooter() {
+export default function PlayerFooter({token}: {token: string}) {
     const [player, setPlayer] = useState<Spotify.Player | null>(null)
     const [isPaused, setIsPaused] = useState(true)
     const [trackPosition, setTrackPosition] = useState(0)
@@ -24,10 +25,13 @@ export default function PlayerFooter() {
     const [track, setTrack] = useState<Track | null>(null)
     const [isShuffle, setIsShuffle] = useState<boolean | null>()
     const [repeatMode, setRepeatMode] = useState<number>(0)
+    const [client_token, setToken] = useState<string | null>(token)
+    const [volumePercentage, setVolumePercentage] = useState<number | null>(null)
+    const [isMuted, setIsMuted] = useState<boolean | null>(volumePercentage && volumePercentage <= 0 ? true : false)
     const trackBarRef = useRef<HTMLDivElement>(null)
+    const volumeBarRef = useRef<HTMLDivElement>(null)
     const intervalRef = useRef<NodeJS.Timeout | null>(null)
     const isSeeking = useRef(false)
-    const [client_token, setToken] = useState<string | null>("")
     const nextRepeatMode = (repeatMode + 1) % 3
     const repeatModes = ["off", "context", "track"]
     const apiMode = repeatModes[nextRepeatMode]
@@ -35,7 +39,7 @@ export default function PlayerFooter() {
     const getCurrentTrackPositionWidth = (ms: number) => {
         if (!trackDuration) return "0%"
         const percentage = (ms / trackDuration) * 100
-        return `${percentage}%`
+        return ms === trackDuration ? `100%` : `${percentage}%`
     }
 
     const onSeek = async (clientX: number) => {
@@ -48,9 +52,19 @@ export default function PlayerFooter() {
         setTrackPosition(seekMs)
     }
 
+    const onVolume = async (clientX: number) => {
+        if (!volumeBarRef.current || !player) return
+        const rect = volumeBarRef.current.getBoundingClientRect()
+        const x = Math.min(Math.max(clientX - rect.left, 0), rect.width)
+        const pct = x / rect.width
+        const seekMs = pct * 100
+        setVolumePercentage(seekMs)
+        player.setVolume(pct)
+    }
+
     useEffect(() => {
-        const token = new URLSearchParams(window.location.search).get("access_token")
-        setToken(token)
+        // const token = new URLSearchParams(window.location.search).get("access_token")
+        // setToken(token)
         if (!token) return
 
         const script = document.createElement("script")
@@ -68,7 +82,7 @@ export default function PlayerFooter() {
 
             setPlayer(playerInstance)
 
-            playerInstance.addListener("ready", ({device_id}) => {
+            playerInstance.addListener("ready", ({device_id}: Spotify.ReadyEvent) => {
                 fetch("https://api.spotify.com/v1/me/player", {
                     method: "PUT",
                     headers: {
@@ -90,6 +104,9 @@ export default function PlayerFooter() {
                 setTrack(state.track_window.current_track)
                 setIsShuffle(state.shuffle)
                 setRepeatMode(state.repeat_mode)
+                playerInstance.getVolume().then((volume) => {
+                    setVolumePercentage(volume * 100)
+                })
             })
 
             playerInstance.connect()
@@ -107,7 +124,11 @@ export default function PlayerFooter() {
         intervalRef.current = setInterval(async () => {
             const state = await player.getCurrentState()
             if (state && !isSeeking.current) {
-                setTrackPosition(state.position)
+                if (state.position === state.duration) {
+                    setTrackPosition(state.duration)
+                } else {
+                    setTrackPosition(state.position)
+                }
             }
         }, 500)
 
@@ -129,6 +150,12 @@ export default function PlayerFooter() {
     const playNext = () => {
         if (!player) return
         player.nextTrack()
+    }
+
+    const handleMute = () => {
+        if (!player || !volumePercentage) return
+        player.setVolume(!isMuted ? 0 : volumePercentage / 100)
+        setIsMuted(!isMuted)
     }
 
     async function onShuffle() {
@@ -166,7 +193,7 @@ export default function PlayerFooter() {
         }
     }
 
-    const handleMouseDown = (e: React.MouseEvent) => {
+    const handleMouseDownTrackBar = (e: React.MouseEvent) => {
         isSeeking.current = true
         onSeek(e.clientX)
         const handleMouseMove = (moveEvent: MouseEvent) => {
@@ -182,44 +209,71 @@ export default function PlayerFooter() {
         document.addEventListener("mouseup", handleMouseUp)
     }
 
+    const handleMouseDownVolumeBar = (e: React.MouseEvent) => {
+        onVolume(e.clientX)
+        const handleMouseMove = (moveEvent: MouseEvent) => {
+            onVolume(moveEvent.clientX)
+        }
+        const handleMouseUp = (upEvent: MouseEvent) => {
+            onVolume(upEvent.clientX)
+            document.removeEventListener("mousemove", handleMouseMove)
+            document.removeEventListener("mouseup", handleMouseUp)
+        }
+        document.addEventListener("mousemove", handleMouseMove)
+        document.addEventListener("mouseup", handleMouseUp)
+    }
+
     return (
-        <div className="bg-zinc-950 flex items-center p-3 justify-between">
+        <div className="bg-zinc-950 flex items-center p-3 gap-3 justify-between">
             <div className="flex-1 items-center gap-3 flex">
-                <img src={track?.album.images[0]?.url} alt={track?.name} width={56} height={56} className="rounded bg-zinc-50/5 border-0" />
-                <div className="flex flex-col justify-center text-white">
-                    <p className="text-sm">{track?.name}</p>
-                    <p className="text-xs opacity-50">{track?.artists.map((artist) => artist.name).join(", ")}</p>
-                </div>
+                {track ? (
+                    <>
+                        <img
+                            src={track?.album.images[0]?.url}
+                            alt={track?.name}
+                            width={56}
+                            height={56}
+                            className="rounded bg-zinc-50/5 border-0 w-14"
+                        />
+                        <div className="flex flex-col justify-center text-white">
+                            <p className="text-sm">{track?.name}</p>
+                            <p className="text-xs opacity-50">{track?.artists.map((artist) => artist.name).join(", ")}</p>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <div className="flex items-center justify-center animate-pulse w-14 h-14">
+                            <div className="bg-gray-200 w-full h-full rounded" />
+                        </div>
+                        <div className="grid grid-cols-5 gap-3 grid-rows-2 animate-pulse flex-6 justify-evenly items-center">
+                            <div className="col-start-1 col-end-3 h-4 rounded bg-gray-200" />
+                            <div className="col-start-1 col-end-2 h-3 rounded bg-gray-400" />
+                        </div>
+                    </>
+                )}
             </div>
 
             <div className="flex-2 flex flex-col justify-center gap-1">
                 <div className="flex items-center justify-center gap-5">
-                    <button onClick={onShuffle} className={`${isShuffle ?? "isShuffleActive"} cursor-pointer flex-col items-center flex gap-1 `}>
-                        <Shuffle
-                            size={16}
+                    <button
+                        onClick={onShuffle}
+                        className={`${
+                            isShuffle && "trackButtonAcitve"
+                        } hover:scale-110 relative cursor-pointer flex-col items-center flex gap-1 `}
+                    >
+                        <SpotifyIcon
+                            icon="Shuffle"
+                            opacity={isShuffle ? "100%" : "75%"}
                             color={`${isShuffle ? "oklch(72.3% 0.219 149.579)" : "white"}`}
-                            opacity={isShuffle ? "100%" : "60%"}
-                            className="hover:scale-110 hover:opacity-100"
+                            className="hover:opacity-100"
                         />
-                        {isShuffle && <div className="bg-green-500 w-1 h-1 rounded-full" />}
                     </button>
                     <button onClick={playPrevious} className="cursor-pointer transition-all">
-                        <svg
-                            data-testid="geist-icon"
-                            height="16"
-                            strokeLinejoin="round"
+                        <SpotifyIcon
+                            icon="Previous"
+                            className="text-white/75 hover:scale-105 hover:text-white transition-all"
                             color="white"
-                            viewBox="0 0 16 16"
-                            width="16"
-                            className="text-white/50 hover:scale-105 hover:text-white transition-all"
-                        >
-                            <path
-                                fillRule="evenodd"
-                                clipRule="evenodd"
-                                d="M4.08144 8.21092C3.92706 8.11268 3.92706 7.88733 4.08144 7.78909L14.3658 1.24451C14.5322 1.1386 14.75 1.25815 14.75 1.45542L14.75 14.5446C14.75 14.7419 14.5322 14.8614 14.3658 14.7555L4.08144 8.21092ZM0.75 2V1.25H2.25V2V14V14.75H0.75V14V2Z"
-                                fill="currentColor"
-                            ></path>
-                        </svg>
+                        />
                     </button>
                     <button
                         onClick={togglePlay}
@@ -228,54 +282,31 @@ export default function PlayerFooter() {
                         {isPaused ? <PlayFill size={16} /> : <PauseFill size={16} />}
                     </button>
                     <button onClick={playNext} className="cursor-pointer transition-all">
-                        <svg
-                            data-testid="geist-icon"
-                            height="16"
-                            strokeLinejoin="round"
-                            color="white"
-                            viewBox="0 0 16 16"
-                            width="16"
-                            className="text-white/50 hover:scale-105 hover:text-white transition-all"
-                        >
-                            <path
-                                fillRule="evenodd"
-                                clipRule="evenodd"
-                                d="M11.6686 8.21092C11.8229 8.11268 11.8229 7.88733 11.6686 7.78909L1.38422 1.24451C1.21779 1.1386 1 1.25815 1 1.45542V14.5446C1 14.7419 1.21779 14.8614 1.38422 14.7555L11.6686 8.21092ZM15 2V1.25H13.5V2V14V14.75H15V14V2Z"
-                                fill="currentColor"
-                            ></path>
-                        </svg>
+                        <SpotifyIcon icon="Next" className="text-white/75 hover:scale-105 hover:text-white transition-all" color="white" />
                     </button>
-                    <button onClick={onRepeat} className={`cursor-pointer text-green-500 flex-col items-center flex gap-1 relative`}>
-                        <RotateCw
-                            size={18}
-                            color={repeatMode === 1 || repeatMode === 2 ? `oklch(72.3% 0.219 149.579)` : "white"}
-                            opacity={repeatMode === 0 ? "60%" : "100%"}
-                            className={`hover:scale-110 transition-all`}
+                    <button
+                        onClick={onRepeat}
+                        className={`cursor-pointer hover:scale-110 transition-all text-green-500 flex-col items-center flex gap-1 relative ${
+                            repeatMode && "trackButtonAcitve"
+                        }`}
+                    >
+                        <SpotifyIcon
+                            icon="Repeat"
+                            color={repeatMode ? `oklch(72.3% 0.219 149.579)` : "white"}
+                            className="hover:opacity-100"
+                            opacity={!repeatMode ? "75%" : "100%"}
+                            variant={repeatMode === 2}
                         />
-                        {(repeatMode === 1 || repeatMode === 2) && <div className="bg-green-500 w-1 h-1 rounded-full" />}
-                        {repeatMode === 2 && (
-                            <span
-                                style={{
-                                    color: "green",
-                                    background: "#09090b",
-                                    fontWeight: "700",
-                                    fontSize: "15px",
-                                }}
-                                className="bg-zinc-950 rounded-2xl font-bold absolute top-[-8px] left-1/2 translate-x-[-50%]"
-                            >
-                                1
-                            </span>
-                        )}
                     </button>
                 </div>
 
-                <div className=" text-white/75 font-extrabold flex items-center gap-4 text-xs px-8 ">
+                <div className="text-white/75 font-extrabold flex items-center gap-4 text-xs px-8 ">
                     <p className="text-right">{formatMillisToMinutesSeconds(trackPosition)}</p>
 
                     <div
                         className="flex-1 w-full bg-white/20 h-[6px] rounded relative cursor-pointer trackBarHover"
                         ref={trackBarRef}
-                        onMouseDown={handleMouseDown}
+                        onMouseDown={handleMouseDownTrackBar}
                     >
                         <div
                             id="trackProgress"
@@ -288,7 +319,122 @@ export default function PlayerFooter() {
                 </div>
             </div>
 
-            <div className="flex-1 items-center gap-3 bg-red-300 flex"></div>
+            <div className="flex-1 items-center gap-5 flex w-full h-full justify-end">
+                {/* Playing view */}
+                <button className="cursor-pointer transition-all w-4 flex items-start ">
+                    <SpotifyIcon icon="PlayingScreen" color="white" />
+                </button>
+
+                {/* Mic */}
+                <button className="cursor-pointer transition-all w-4 flex items-start ">
+                    <SpotifyIcon icon="Mic" color="white" />
+                </button>
+
+                {/* Queue */}
+                <button className="cursor-pointer transition-all w-4 flex items-start ">
+                    <SpotifyIcon icon="Queue" color="white" />
+                </button>
+
+                {/* Devices */}
+                <button className="cursor-pointer transition-all w-4 flex items-start ">
+                    <SpotifyIcon icon="OtherDevices" color="white" />
+                </button>
+
+                <div className="text-white/75 font-extrabold flex gap-3 items-center h-full w-28 trackBarHover">
+                    <button onClick={handleMute} className="cursor-pointer transition-all w-4 flex items-start ">
+                        {!isMuted ? (
+                            volumePercentage ? (
+                                volumePercentage <= 10 ? (
+                                    <svg
+                                        data-testid="geist-icon"
+                                        height="16"
+                                        strokeLinejoin="round"
+                                        color="white"
+                                        viewBox="0 0 16 16"
+                                        width="16"
+                                        fill="currentColor"
+                                    >
+                                        <path d="M9.741.85a.75.75 0 0 1 .375.65v13a.75.75 0 0 1-1.125.65l-6.925-4a3.642 3.642 0 0 1-1.33-4.967 3.639 3.639 0 0 1 1.33-1.332l6.925-4a.75.75 0 0 1 .75 0zm-6.924 5.3a2.139 2.139 0 0 0 0 3.7l5.8 3.35V2.8l-5.8 3.35zm8.683 4.29V5.56a2.75 2.75 0 0 1 0 4.88z"></path>
+                                    </svg>
+                                ) : volumePercentage < 50 ? (
+                                    <svg
+                                        data-testid="geist-icon"
+                                        height="16"
+                                        strokeLinejoin="round"
+                                        color="white"
+                                        viewBox="0 0 16 16"
+                                        fill="currentColor"
+                                        width="16"
+                                    >
+                                        <path d="M9.741.85a.75.75 0 0 1 .375.65v13a.75.75 0 0 1-1.125.65l-6.925-4a3.642 3.642 0 0 1-1.33-4.967 3.639 3.639 0 0 1 1.33-1.332l6.925-4a.75.75 0 0 1 .75 0zm-6.924 5.3a2.139 2.139 0 0 0 0 3.7l5.8 3.35V2.8l-5.8 3.35zm8.683 6.087a4.502 4.502 0 0 0 0-8.474v1.65a2.999 2.999 0 0 1 0 5.175v1.649z"></path>
+                                    </svg>
+                                ) : volumePercentage >= 50 ? (
+                                    <svg
+                                        data-testid="geist-icon"
+                                        height="16"
+                                        strokeLinejoin="round"
+                                        color="white"
+                                        viewBox="0 0 16 16"
+                                        width="16"
+                                        fill="currentColor"
+                                    >
+                                        <path d="M9.741.85a.75.75 0 0 1 .375.65v13a.75.75 0 0 1-1.125.65l-6.925-4a3.642 3.642 0 0 1-1.33-4.967 3.639 3.639 0 0 1 1.33-1.332l6.925-4a.75.75 0 0 1 .75 0zm-6.924 5.3a2.139 2.139 0 0 0 0 3.7l5.8 3.35V2.8l-5.8 3.35zm8.683 4.29V5.56a2.75 2.75 0 0 1 0 4.88z"></path>
+                                        <path d="M11.5 13.614a5.752 5.752 0 0 0 0-11.228v1.55a4.252 4.252 0 0 1 0 8.127v1.55z"></path>
+                                    </svg>
+                                ) : (
+                                    <></>
+                                )
+                            ) : (
+                                <svg
+                                    data-testid="geist-icon"
+                                    height="16"
+                                    strokeLinejoin="round"
+                                    color="white"
+                                    viewBox="0 0 16 16"
+                                    width="16"
+                                    fill="currentColor"
+                                >
+                                    <path
+                                        fillRule="evenodd"
+                                        clipRule="evenodd"
+                                        d="M14 1.25001V0.0551147L12.9239 0.574593L5.82844 4.00001H3.25001H2.67706L1.33542 3.32919L0.664595 2.99378L-0.00622559 4.33542L0.664595 4.67083L14.6646 11.6708L15.3354 12.0062L16.0062 10.6646L15.3354 10.3292L14 9.66148V9.50001V1.25001ZM12.5 8.91148V2.4449L6.37757 5.40056C6.24198 5.46601 6.09337 5.50001 5.94282 5.50001H5.67706L12.5 8.91148ZM3.50001 8.00001V7.25001H2.00001V8.00001V11C2.00001 11.5523 2.44772 12 3.00001 12H5.82844L12.9239 15.4254L14 15.9449V14.75V13.5V12.75H12.5V13.5V13.5551L6.37757 10.5995C6.24198 10.534 6.09337 10.5 5.94282 10.5H3.50001V8.00001Z"
+                                        fill="currentColor"
+                                    ></path>
+                                </svg>
+                            )
+                        ) : (
+                            <svg
+                                data-testid="geist-icon"
+                                height="16"
+                                strokeLinejoin="round"
+                                color="white"
+                                viewBox="0 0 16 16"
+                                width="16"
+                                fill="currentColor"
+                            >
+                                <path d="M13.86 5.47a.75.75 0 0 0-1.061 0l-1.47 1.47-1.47-1.47A.75.75 0 0 0 8.8 6.53L10.269 8l-1.47 1.47a.75.75 0 1 0 1.06 1.06l1.47-1.47 1.47 1.47a.75.75 0 0 0 1.06-1.06L12.39 8l1.47-1.47a.75.75 0 0 0 0-1.06z"></path>
+                                <path d="M10.116 1.5A.75.75 0 0 0 8.991.85l-6.925 4a3.642 3.642 0 0 0-1.33 4.967 3.639 3.639 0 0 0 1.33 1.332l6.925 4a.75.75 0 0 0 1.125-.649v-1.906a4.73 4.73 0 0 1-1.5-.694v1.3L2.817 9.852a2.141 2.141 0 0 1-.781-2.92c.187-.324.456-.594.78-.782l5.8-3.35v1.3c.45-.313.956-.55 1.5-.694V1.5z"></path>
+                            </svg>
+                        )}
+                    </button>
+                    <div
+                        className="flex-1 w-full bg-white/20 h-[6px] rounded relative cursor-pointer"
+                        ref={volumeBarRef}
+                        onMouseDown={handleMouseDownVolumeBar}
+                    >
+                        <div
+                            id="trackProgress"
+                            className="bg-white h-full rounded absolute top-0 left-0 transition-all duration-100"
+                            style={{width: `${isMuted ? 0 : volumePercentage}%`}}
+                        />
+                    </div>
+                </div>
+
+                {/* FullScreen */}
+                <button className="cursor-pointer transition-all w-4 flex items-start ">
+                    <SpotifyIcon icon="FullScreen" color="white" />
+                </button>
+            </div>
         </div>
     )
 }

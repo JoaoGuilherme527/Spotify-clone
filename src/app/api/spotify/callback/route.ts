@@ -1,17 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
-import axios from 'axios';
+// app/api/auth/callback/route.ts  (or wherever your GET lives)
+import { NextRequest, NextResponse } from 'next/server'
+import axios from 'axios'
 
 export async function GET(req: NextRequest) {
-  const code = req.nextUrl.searchParams.get('code');
-
-  if (!code) return NextResponse.json({ error: 'Code not found' }, { status: 400 });
+  const code = req.nextUrl.searchParams.get('code')
+  if (!code) {
+    return NextResponse.json({ error: 'Code not found' }, { status: 400 })
+  }
 
   const credentials = Buffer.from(
     `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`
-  ).toString('base64');
+  ).toString('base64')
 
   try {
-    const res = await axios.post(
+    const { data: sdkToken } = await axios.post(
       'https://accounts.spotify.com/api/token',
       new URLSearchParams({
         grant_type: 'authorization_code',
@@ -23,12 +25,30 @@ export async function GET(req: NextRequest) {
           Authorization: `Basic ${credentials}`,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-      })
-    const sdkToken = res.data;
-    const url = new URL('/dashboard', req.url);
-    url.searchParams.set('access_token', sdkToken.access_token);
-    return NextResponse.redirect(url.toString());
+      }
+    )
+
+    const response = NextResponse.redirect(
+      new URL(process.env.REDIRECT_URI + '/dashboard', req.url)
+    )
+
+    response.cookies.set({
+      name: 'access_token',
+      value: sdkToken.access_token,
+      httpOnly: true,
+      // Only secure in production over HTTPS:
+      secure: process.env.NODE_ENV === 'production',
+      // Allows sending on OAuth redirect:
+      sameSite: 'lax',
+      path: '/',
+      maxAge: sdkToken.expires_in ?? 3600,
+    })
+
+    return response
   } catch (error: any) {
-    return NextResponse.json({ error: error.response?.data || error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.response?.data || error.message },
+      { status: 500 }
+    )
   }
 }

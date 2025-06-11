@@ -37,3 +37,18 @@ html {
         @apply bg-white w-3 h-3 absolute top-[-4px] right-[-4px] rounded-full;
     }
 }
+
+.trackButtonAcitve::before {
+    background-color: oklch(72.3% 0.219 149.579);
+    border-radius: 50%;
+    bottom: -8px;
+    content: "";
+    display: block;
+    left: 50%;
+    position: absolute;
+    width: 4px;
+    inline-size: 4px;
+    height: 4px;
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
+}
