@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     )
 
     const response = NextResponse.redirect(
-      new URL(process.env.REDIRECT_URI + '/dashboard', req.url)
+      new URL(process.env.REDIRECT_URI + '/', req.url)
     )
 
     response.cookies.set({
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
       // Allows sending on OAuth redirect:
       sameSite: 'lax',
       path: '/',
-      maxAge: sdkToken.expires_in ?? 3600,
+      maxAge: 3600,
     })
 
     return response

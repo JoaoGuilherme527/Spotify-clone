@@ -11,6 +11,10 @@
     }
 }
 
+:root {
+    --image-opacity: 0;
+}
+
 html {
     font-size: 16px;
 }
@@ -52,3 +56,18 @@ html {
     -webkit-transform: translateX(-50%);
     transform: translateX(-50%);
 }
+
+
+.imageHover > img::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: #000;
+}
+
+/* .imageHover:hover > div:first-child > img::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: #000000;
+} */

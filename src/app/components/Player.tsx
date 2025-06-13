@@ -56,6 +56,7 @@ export default function PlayerFooter({token}: {token: string}) {
         const pct = x / rect.width
         const seekMs = pct * 100
         setVolumePercentage(seekMs)
+        if(seekMs > 0){setIsMuted(false)}
         player.setVolume(pct)
     }
 
@@ -71,7 +72,7 @@ export default function PlayerFooter({token}: {token: string}) {
             const playerInstance = new Spotify.Player({
                 name: "Spotify Clone",
                 getOAuthToken: (cb) => cb(token),
-                volume: 0.5,
+                volume: 0.2,
                 enableMediaSession: true,
             })
 
@@ -251,8 +252,8 @@ export default function PlayerFooter({token}: {token: string}) {
                             className="rounded bg-zinc-50/5 border-0 w-14"
                         />
                         <div className="flex flex-col justify-center text-white">
-                            <p className="text-sm">{trackState?.name}</p>
-                            <p className="text-xs opacity-50">{trackState?.artists.map((artist) => artist.name).join(", ")}</p>
+                            <p className="text-md ">{trackState?.name}</p>
+                            <p className="text-sm opacity-60">{trackState?.artists.map((artist) => artist.name).join(", ")}</p>
                         </div>
                         <button
                             onClick={handleSaveTrackForUser}
@@ -411,21 +412,17 @@ export default function PlayerFooter({token}: {token: string}) {
                                 )
                             ) : (
                                 <svg
-                                    data-testid="geist-icon"
-                                    height="16"
-                                    strokeLinejoin="round"
-                                    color="white"
-                                    viewBox="0 0 16 16"
-                                    width="16"
-                                    fill="currentColor"
-                                >
-                                    <path
-                                        fillRule="evenodd"
-                                        clipRule="evenodd"
-                                        d="M14 1.25001V0.0551147L12.9239 0.574593L5.82844 4.00001H3.25001H2.67706L1.33542 3.32919L0.664595 2.99378L-0.00622559 4.33542L0.664595 4.67083L14.6646 11.6708L15.3354 12.0062L16.0062 10.6646L15.3354 10.3292L14 9.66148V9.50001V1.25001ZM12.5 8.91148V2.4449L6.37757 5.40056C6.24198 5.46601 6.09337 5.50001 5.94282 5.50001H5.67706L12.5 8.91148ZM3.50001 8.00001V7.25001H2.00001V8.00001V11C2.00001 11.5523 2.44772 12 3.00001 12H5.82844L12.9239 15.4254L14 15.9449V14.75V13.5V12.75H12.5V13.5V13.5551L6.37757 10.5995C6.24198 10.534 6.09337 10.5 5.94282 10.5H3.50001V8.00001Z"
-                                        fill="currentColor"
-                                    ></path>
-                                </svg>
+                                data-testid="geist-icon"
+                                height="16"
+                                strokeLinejoin="round"
+                                color="white"
+                                viewBox="0 0 16 16"
+                                width="16"
+                                fill="currentColor"
+                            >
+                                <path d="M13.86 5.47a.75.75 0 0 0-1.061 0l-1.47 1.47-1.47-1.47A.75.75 0 0 0 8.8 6.53L10.269 8l-1.47 1.47a.75.75 0 1 0 1.06 1.06l1.47-1.47 1.47 1.47a.75.75 0 0 0 1.06-1.06L12.39 8l1.47-1.47a.75.75 0 0 0 0-1.06z"></path>
+                                <path d="M10.116 1.5A.75.75 0 0 0 8.991.85l-6.925 4a3.642 3.642 0 0 0-1.33 4.967 3.639 3.639 0 0 0 1.33 1.332l6.925 4a.75.75 0 0 0 1.125-.649v-1.906a4.73 4.73 0 0 1-1.5-.694v1.3L2.817 9.852a2.141 2.141 0 0 1-.781-2.92c.187-.324.456-.594.78-.782l5.8-3.35v1.3c.45-.313.956-.55 1.5-.694V1.5z"></path>
+                            </svg>
                             )
                         ) : (
                             <svg

@@ -1,0 +1,67 @@
+.
+├── demo.tree
+├── next.config.ts
+├── next-env.d.ts
+├── package.json
+├── package-lock.json
+├── postcss.config.mjs
+├── README.md
+├── src
+│   ├── app
+│   │   ├── api
+│   │   │   └── spotify
+│   │   │       ├── callback
+│   │   │       │   └── route.ts
+│   │   │       └── login
+│   │   │           └── route.ts
+│   │   ├── components
+│   │   │   ├── Aside.tsx
+│   │   │   ├── Header.tsx
+│   │   │   ├── MainContent.tsx
+│   │   │   └── Player.tsx
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   ├── login
+│   │   │   └── page.tsx
+│   │   ├── providers.tsx
+│   │   └── (withLayout)
+│   │       ├── album
+│   │       │   └── [id]
+│   │       │       └── page.tsx
+│   │       ├── collection
+│   │       │   └── [id]
+│   │       │       └── page.tsx
+│   │       ├── home
+│   │       │   └── page.tsx
+│   │       ├── layout.tsx
+│   │       └── playlist
+│   │           └── [id]
+│   │               └── page.tsx
+│   ├── context
+│   │   └── GlobalContext.tsx
+│   ├── icons
+│   │   └── index.tsx
+│   ├── lib
+│   │   ├── actions.ts
+│   │   └── spotifyActions.ts
+│   ├── middleware.ts
+│   ├── types
+│   │   └── spotify.d.ts
+│   └── typings
+│       ├── album.d.ts
+│       ├── artist.d.ts
+│       ├── audiobook.d.ts
+│       ├── browse.d.ts
+│       ├── episode.d.ts
+│       ├── global.d.ts
+│       ├── index.d.ts
+│       ├── player.d.ts
+│       ├── playlist.d.ts
+│       ├── show.d.ts
+│       ├── track.d.ts
+│       └── user.d.ts
+├── tailwind.config.js
+├── tsconfig.json
+└── yarn.lock
+
+22 directories, 43 files
