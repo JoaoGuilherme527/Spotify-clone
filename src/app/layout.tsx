@@ -1,11 +1,6 @@
 import type {Metadata} from "next"
 import "./globals.css"
 import {Providers} from "./providers"
-import Header from "./components/Header"
-import Aside from "./components/Aside"
-import PlayerFooter from "./components/Player"
-import {GetAccessToken} from "@/lib/actions"
-import { GetCurrentUser, GetUserSavedAlbum, GetUserSavedPlaylist } from "@/lib/spotifyActions"
 
 export const metadata: Metadata = {
     title: "Spotify Clone",

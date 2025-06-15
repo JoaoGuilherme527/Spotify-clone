@@ -1,29 +1,68 @@
 import Aside from "@/app/components/Aside"
 import Header from "@/app/components/Header"
 import PlayerFooter from "@/app/components/Player"
-import {GetAccessToken} from "@/lib/actions"
+import {GetAccessToken, RefreshToken} from "@/lib/actions"
 import {GetCurrentUser, GetSaveTracksForUser, GetUserSavedAlbum, GetUserSavedPlaylist} from "@/lib/spotifyActions"
+import {AxiosError} from "axios"
+import {NextResponse} from "next/server"
+import {redirect} from "next/navigation"
+
+async function loadDataWithToken() {
+    try {
+        const token = await GetAccessToken()
+        return {
+            user: await GetCurrentUser(token),
+            albums: await GetUserSavedAlbum(token),
+            playlists: await GetUserSavedPlaylist({token}),
+            savedTracks: await GetSaveTracksForUser(token),
+            token,
+        }
+    } catch (error) {
+        console.log("ERROR:", error)
+        const axiosError = error as AxiosError
+        if (axiosError.status === 401) {
+            const newToken = await RefreshToken()
+            if (newToken) {
+                return {
+                    user: await GetCurrentUser(newToken),
+                    albums: await GetUserSavedAlbum(newToken),
+                    playlists: await GetUserSavedPlaylist({token: newToken}),
+                    savedTracks: await GetSaveTracksForUser(newToken),
+                    token: newToken,
+                }
+            }
+        }
+        throw error
+    }
+}
 
 export default async function HomeRoot({
     children,
 }: Readonly<{
     children: React.ReactNode
 }>) {
-    const token = await GetAccessToken()
+    try {
+        const {albums, playlists, savedTracks, token, user} = await loadDataWithToken()
 
-    const user = await GetCurrentUser(token)
-    const albums = await GetUserSavedAlbum(token)
-    const playlists = await GetUserSavedPlaylist({token, user_id: user.id})
-    const savedTracks = await GetSaveTracksForUser(token)
+        return (
+            <div className="h-screen overflow-y-hidden flex flex-col bg-zinc-950 ">
+                <Header />
+                <main className="flex flex-1 items-start rounded gap-[6px] px-2">
+                    <Aside token={token} albums={albums} playlists={playlists} user={user} savedTracks={savedTracks} />
+                    <section className="flex-1 rounded-lg bg-zinc-50/5 h-full">{children}</section>
+                </main>
+                <PlayerFooter token={token} />
+            </div>
+        )
+    } catch (Error) {
+        const error = Error as AxiosError
 
-    return (
-        <div className="h-screen overflow-y-hidden flex flex-col bg-zinc-950 ">
-            <Header />
-            <main className="flex flex-1 rounded gap-[6px] px-2">
-                <Aside token={token} albums={albums} playlists={playlists} user={user} savedTracks={savedTracks} />
-                <section className="flex-1 rounded-lg bg-zinc-50/5">{children}</section>
-            </main>
-            <PlayerFooter token={token} />
-        </div>
-    )
+        // redireciona para login se der erro 401
+        if (error.status === 401) {
+            redirect("/login")
+        }
+
+        // fallback genérico
+        redirect("/login")
+    }
 }

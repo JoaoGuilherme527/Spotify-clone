@@ -12,13 +12,16 @@
 │   │   │   └── spotify
 │   │   │       ├── callback
 │   │   │       │   └── route.ts
-│   │   │       └── login
+│   │   │       ├── login
+│   │   │       │   └── route.ts
+│   │   │       └── refresh_token
 │   │   │           └── route.ts
 │   │   ├── components
 │   │   │   ├── Aside.tsx
 │   │   │   ├── Header.tsx
 │   │   │   ├── MainContent.tsx
-│   │   │   └── Player.tsx
+│   │   │   ├── Player.tsx
+│   │   │   └── PlaylistPage.tsx
 │   │   ├── globals.css
 │   │   ├── layout.tsx
 │   │   ├── login
@@ -34,6 +37,7 @@
 │   │       ├── home
 │   │       │   └── page.tsx
 │   │       ├── layout.tsx
+│   │       ├── loading.tsx
 │   │       └── playlist
 │   │           └── [id]
 │   │               └── page.tsx
@@ -64,4 +68,4 @@
 ├── tsconfig.json
 └── yarn.lock
 
-22 directories, 43 files
+23 directories, 46 files

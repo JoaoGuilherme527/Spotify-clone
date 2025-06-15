@@ -69,6 +69,11 @@ export interface Playlist extends Omit<SimplifiedPlaylist, 'tracks'> {
     tracks: PlaylistTrack[];
 }
 
+
+export interface PlaylistRes extends Playlist {
+    tracks: ResponsePromise
+}
+
 /**
  * The structure returned by the [/browse/featured-playlists] endpoint.
  */

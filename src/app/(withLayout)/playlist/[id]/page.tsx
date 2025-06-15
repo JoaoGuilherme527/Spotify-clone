@@ -1,19 +1,16 @@
+import { PlaylistPage } from "@/app/components/PlaylistPage"
+import {GetAccessToken} from "@/lib/actions"
+import {GetPlaylist, GetUser} from "@/lib/spotifyActions"
+
 interface Props {
     params: Promise<{id: string}>
 }
 
-export default async function PlaylistPage({params}: Props) {
+export default async function Page({params}: Props) {
     const {id} = await params
+    const token = await GetAccessToken()
+    const context = await GetPlaylist(token, id)
+    const contextUser = await GetUser(token, context.owner.id)
 
-    // Chame aqui sua função que usa o id
-    // como GetAlbumById(id) ou similar
-    // const album = await GetAlbumById(id)
-
-    return (
-        <div className="p-4">
-            <h1 className="text-red-500">Detalhes da Playlist: {id}</h1>
-            {/* Renderize seu componente com props */}
-            {/* <div/> */}
-        </div>
-    )
+    return <PlaylistPage item={context} contextUser={contextUser} />
 }

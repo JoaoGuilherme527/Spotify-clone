@@ -89,7 +89,7 @@ function Search({...props}: IconProps) {
         </svg>
     )
 }
-function Library({...props}: IconProps) {
+function Library({variant, ...props}: IconProps) {
     return (
         <svg {...props} viewBox="0 0 16 16" width="16" fill="currentColor">
             <path d="M10.97 5.47a.75.75 0 1 1 1.06 1.06L10.56 8l1.47 1.47a.75.75 0 1 1-1.06 1.06l-2-2a.75.75 0 0 1 0-1.06l2-2Z"></path>

@@ -139,8 +139,3 @@ export interface SearchContent {
     /** The audiobook search results. */
     audiobooks?: Paging<SimplifiedAudiobook>;
 }
-
-
-export interface ResponsePromise {
-    href: string, limit: number, next: string, offset: number, previous: string, total: number, items: Array<SavedTrack>
-}

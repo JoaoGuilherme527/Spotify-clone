@@ -36,12 +36,20 @@ export async function GET(req: NextRequest) {
       name: 'access_token',
       value: sdkToken.access_token,
       httpOnly: true,
-      // Only secure in production over HTTPS:
       secure: process.env.NODE_ENV === 'production',
-      // Allows sending on OAuth redirect:
       sameSite: 'lax',
       path: '/',
-      maxAge: 3600,
+      maxAge: sdkToken.expires_in, // 1 Hour
+    })
+
+    response.cookies.set({
+      name: 'refresh_token',
+      value: sdkToken.refresh_token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: sdkToken.expires_in, // 1 Hour
     })
 
     return response
