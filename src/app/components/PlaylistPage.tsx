@@ -7,7 +7,7 @@ import {PlayFill} from "@geist-ui/icons"
 import Image from "next/image"
 import {useEffect, useState} from "react"
 
-export function PlaylistPage({item, contextUser}: {item: PlaylistRes; contextUser: PublicUser}) {
+export function PlaylistPage({item, contextUser}: {item: any; contextUser: PublicUser}) {
     const [color, setColor] = useState("#ffffff40")
     const [imgUrl, setImageUrl] = useState("")
     const length = item.name.length
@@ -102,7 +102,7 @@ export function PlaylistPage({item, contextUser}: {item: PlaylistRes; contextUse
                         </p>
                     </div>
                     <div className="flex h-50 flex-col gap-2 py-2">
-                        {item.tracks.items.map(({track}, index) => (
+                        {item.tracks.items.map(({track}: any, index: number) => (
                             <div className="flex items-center py-2 " key={track.id}>
                                 <div className="flex px-4 opacity-50 text-center w-12">{index + 1}</div>
                                 <div className="flex-4 flex items-center gap-2">
@@ -115,7 +115,7 @@ export function PlaylistPage({item, contextUser}: {item: PlaylistRes; contextUse
                                     />
                                     <div className="flex flex-col">
                                         <p className="text-sm">{track.name}</p>
-                                        <p className="text-sm opacity-50">{track.artists.map(({name}) => name)}</p>
+                                        <p className="text-sm opacity-50">{track.artists.map(({name}: any) => name)}</p>
                                     </div>
                                 </div>
                                 <p className=" flex-2 text-sm opacity-50">Album</p>

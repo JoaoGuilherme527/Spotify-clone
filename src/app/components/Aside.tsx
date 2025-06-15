@@ -10,7 +10,8 @@ import {useGlobalContext} from "@/context/GlobalContext"
 
 interface AsideProps {
     token: string
-    albums: Paging<SavedAlbum>
+    // albums: Paging<SavedAlbum>
+    albums: any
     playlists: Paging<SimplifiedPlaylist>
     savedTracks: Paging<SimplifiedTrack>
     user: PrivateUser
@@ -83,7 +84,7 @@ export default function Aside({token, albums, playlists, savedTracks, user}: Asi
 
     const router = useRouter()
 
-    let libraryList: LibraryItem[] = [...albums.items.map(({album}) => album), ...playlists.items]
+    let libraryList: LibraryItem[] = [...albums.items.map(({album}: any) => album), ...playlists.items]
 
     if (searchTerm) {
         libraryList = libraryList.filter((item) => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -104,7 +105,7 @@ export default function Aside({token, albums, playlists, savedTracks, user}: Asi
             setIsHover={setIsHover}
             imageUrl="https://misc.scdn.co/liked-songs/liked-songs-64.png"
             subtitle={`Playlist • ${savedTracks.total} songs`}
-            playUris={savedTracks.items.map(({track}) => track.uri)}
+            playUris={savedTracks.items.map(({track}: any) => track.uri)}
             onClickNavigate={() => router.push("/collection/Liked Songs")}
         />
     )

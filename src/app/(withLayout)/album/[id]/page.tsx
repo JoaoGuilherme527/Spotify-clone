@@ -8,7 +8,7 @@ interface Props {
 export default async function AlbumPage({params}: Props) {
     const {id} = await params
     const token = await GetAccessToken()
-    const context = await GetAlbum(token, id)
+    const context: any = await GetAlbum(token, id)
 
     // Chame aqui sua função que usa o id
     // como GetAlbumById(id) ou similar
