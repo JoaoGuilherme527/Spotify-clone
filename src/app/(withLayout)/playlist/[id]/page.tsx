@@ -12,5 +12,5 @@ export default async function Page({params}: Props) {
     const context = await GetPlaylist(token, id)
     const contextUser = await GetUser(token, context.owner.id)
 
-    return <PlaylistPage item={context} contextUser={contextUser} />
+    return <PlaylistPage item={context} contextUser={contextUser} token={token} />
 }

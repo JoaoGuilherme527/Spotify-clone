@@ -24,7 +24,6 @@ export async function RefreshToken(): Promise<string | null> {
   }
 
   const data = await res.json()
-  console.log(data);
   const cookiesStore = (await cookies())
 
   cookiesStore.set('access_token', data.access_token, {

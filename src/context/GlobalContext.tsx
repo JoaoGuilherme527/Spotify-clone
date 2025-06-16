@@ -3,8 +3,10 @@
 import React, {createContext, useContext, useState, type ReactNode} from "react"
 
 interface GlobalContextType {
-    currentPLaying: {uri: string; paused: boolean}
-    setCurrentPlaying: ({paused, uri}: {uri: string; paused: boolean}) => void
+    device_id: string
+    setDeviceId: (device_id: string) => void
+    currentPLaying: {contextUri: string; paused: boolean; trackUri: string}
+    setCurrentPlaying: ({paused, contextUri, trackUri}: {contextUri: string; paused: boolean; trackUri: string}) => void
 }
 
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined)
@@ -22,7 +24,12 @@ interface GlobalContextProviderProps {
 }
 
 export function GlobalContextProvider({children}: GlobalContextProviderProps) {
-    const [currentPLaying, setCurrentPlaying] = useState<{uri: string; paused: boolean}>({uri: "", paused: true})
+    const [currentPLaying, setCurrentPlaying] = useState<{contextUri: string; paused: boolean; trackUri: string}>({
+        contextUri: "",
+        paused: true,
+        trackUri: "",
+    })
+    const [device_id, setDeviceId] = useState<string>("")
 
-    return <GlobalContext.Provider value={{currentPLaying, setCurrentPlaying}}>{children}</GlobalContext.Provider>
+    return <GlobalContext.Provider value={{currentPLaying, setCurrentPlaying, device_id, setDeviceId}}>{children}</GlobalContext.Provider>
 }

@@ -22,7 +22,7 @@ export type SavedAlbum = Saved<'album', Album>
  */
 export interface Album extends Omit<SimplifiedAlbum, 'album_group'> {
     /** The artists of the album. */
-    artists: Artist[];
+    // artists: Artist[];
     /** The copyright statements of the album. */
     copyrights: Copyright[];
     /** Known external IDs for the album. */

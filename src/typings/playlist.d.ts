@@ -28,6 +28,20 @@ export interface PlaylistTrack {
 }
 
 /**
+ * The structure containing the details of the Spotify Track in the playlist..
+ */
+export interface PlaylistTrackCustom {
+    /** The date and time the track or episode was added.  */
+    added_at: string | null;
+    /** The Spotify user who added the track or episode. */
+    added_by: PublicUser | null;
+    /** Whether this track or episode is a local file or not. */
+    is_local: boolean;
+    /** Information about the track or episode. */
+    track: Track;
+}
+
+/**
  * The structure containing the simplified details of the Spotify Playlist.
  */
 export interface SimplifiedPlaylist {
@@ -70,10 +84,6 @@ export interface Playlist extends Omit<SimplifiedPlaylist, 'tracks'> {
 }
 
 
-export interface PlaylistRes extends Playlist {
-    tracks: ResponsePromise
-}
-
 /**
  * The structure returned by the [/browse/featured-playlists] endpoint.
  */
@@ -96,4 +106,10 @@ export interface CreatePlaylistQuery {
     collaboratve?: boolean;
     /** The description for the playlist. */
     description?: string;
+}
+
+
+
+export interface PlaylistById extends Omit<Playlist, 'tracks'> {
+    tracks: Paging<PlaylistTrackCustom>
 }

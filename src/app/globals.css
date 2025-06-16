@@ -64,10 +64,3 @@ html {
     inset: 0;
     background-color: #000;
 }
-
-/* .imageHover:hover > div:first-child > img::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-color: #000000;
-} */

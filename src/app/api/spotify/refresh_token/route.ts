@@ -36,7 +36,6 @@ export async function GET() {
         }
 
         const res = NextResponse.json({ access_token: data.access_token, refresh_token: data.refresh_token })
-        console.log({ data });
         return res
     } catch (error) {
         console.log(error);

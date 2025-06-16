@@ -45,11 +45,11 @@ export default async function HomeRoot({
         const {albums, playlists, savedTracks, token, user} = await loadDataWithToken()
 
         return (
-            <div className="h-screen overflow-y-hidden flex flex-col bg-zinc-950 ">
-                <Header />
-                <main className="flex flex-1 items-start rounded gap-[6px] px-2">
+            <div className="h-screen overflow-y-hidden flex flex-col bg-black ">
+                <Header user={user} />
+                <main className="flex items-start rounded relative gap-[6px] px-2" style={{height:'100%'}}>
                     <Aside token={token} albums={albums} playlists={playlists} user={user} savedTracks={savedTracks} />
-                    <section className="flex-1 rounded-lg bg-zinc-50/5 h-full">{children}</section>
+                    <section className="flex-1 rounded-lg bg-[#121212] h-full">{children}</section>
                 </main>
                 <PlayerFooter token={token} />
             </div>

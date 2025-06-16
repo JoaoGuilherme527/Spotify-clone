@@ -7,15 +7,21 @@ import {Track} from "@/typings"
 import {PauseFill, PlayFill} from "@geist-ui/icons"
 import {useEffect, useRef, useState} from "react"
 
-function formatMillisToMinutesSeconds(ms: number): string {
+export function formatMillisToMinutesSeconds(ms: number): string {
     const totalSeconds = Math.floor(ms / 1000)
-    const minutes = Math.floor(totalSeconds / 60)
+    const hours = Math.floor(totalSeconds / 3600)
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
     const seconds = totalSeconds % 60
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`
+
+    if (hours > 0) {
+        return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
+    } else {
+        return `${minutes}:${seconds.toString().padStart(2, "0")}`
+    }
 }
 
 export default function PlayerFooter({token}: {token: string}) {
-    const {setCurrentPlaying} = useGlobalContext()
+    const {setCurrentPlaying, setDeviceId} = useGlobalContext()
 
     const [player, setPlayer] = useState<Spotify.Player | null>(null)
     const [isPaused, setIsPaused] = useState(true)
@@ -84,6 +90,7 @@ export default function PlayerFooter({token}: {token: string}) {
             setPlayer(playerInstance)
 
             playerInstance.addListener("ready", ({device_id}: Spotify.ReadyEvent) => {
+                setDeviceId(device_id)
                 fetch("https://api.spotify.com/v1/me/player", {
                     method: "PUT",
                     headers: {
@@ -119,7 +126,11 @@ export default function PlayerFooter({token}: {token: string}) {
                 const isSavedData = await response.json()
                 setIsTrackSaved(isSavedData[0])
 
-                setCurrentPlaying({uri: state.context.uri as string, paused: state.paused})
+                setCurrentPlaying({
+                    contextUri: state.context.uri as string,
+                    paused: state.paused,
+                    trackUri: state.track_window.current_track.uri,
+                })
             })
 
             playerInstance.connect()
@@ -248,7 +259,7 @@ export default function PlayerFooter({token}: {token: string}) {
     }
 
     return (
-        <div className="bg-zinc-950 flex h-20 items-center p-3 gap-3 justify-between">
+        <div className="flex items-center p-3 gap-3 justify-between" style={{height: 90}}>
             <div className="flex-1 items-center gap-4 flex">
                 {trackState ? (
                     <>
