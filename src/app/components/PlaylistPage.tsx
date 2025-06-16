@@ -41,7 +41,7 @@ export function formatRelativeDate(isoDate: string): string {
 export function PlaylistPage({item, contextUser, token}: {item: PlaylistById; contextUser: PublicUser; token: string}) {
     const {currentPLaying, setCurrentPlaying,device_id} = useGlobalContext()
 
-    const [color, setColor] = useState("#ffffff40")
+    const [color, setColor] = useState("#1f1f1f")
     const [imgUrl, setImageUrl] = useState("")
     const [opacity, setOpacity] = useState(0)
     const [isStuck, setIsStuck] = useState(false)
