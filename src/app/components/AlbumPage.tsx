@@ -1,26 +1,27 @@
 "use client"
 
-import {useEffect, useRef, useState} from "react"
+import {useEffect, useLayoutEffect, useRef, useState} from "react"
 import Image from "next/image"
 import {PauseFill, PlayFill} from "@geist-ui/icons"
-import {getAverageColor, handlePlayPause} from "@/lib/spotifyActions"
+import {capitalize, getAverageColor, handlePlayPause} from "@/lib/spotifyActions"
 import {useGlobalContext} from "@/context/GlobalContext"
-import type {PlaylistById, PublicUser} from "@/typings"
+import type {Album, Artist, Paging, PlaylistById, PublicUser, SavedAlbum, SimplifiedTrack} from "@/typings"
 import TrackList from "./TrackList"
 
-interface PlaylistPageProps {
-    item: PlaylistById
-    contextUser: PublicUser
+interface AlbumPageProps {
+    item: Album
     token: string
+    artist: Artist
 }
 
-export function PlaylistPage({item, contextUser, token}: PlaylistPageProps) {
+export function AlbumPage({item, token, artist}: AlbumPageProps) {
     const {currentPLaying, playerInstanceContext} = useGlobalContext()
 
-    const [bgColor, setBgColor] = useState("oklch(62.7% 0.194 149.214)")
+    const [bgColor, setBgColor] = useState("#27272a")
     const [imageUrl, setImageUrl] = useState("")
     const [opacity, setOpacity] = useState(0)
     const [isStuck, setIsStuck] = useState(false)
+    const [loaded, setLoaded] = useState(false)
 
     const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -32,16 +33,7 @@ export function PlaylistPage({item, contextUser, token}: PlaylistPageProps) {
         else return "text-8xl"
     }
 
-    useEffect(() => {
-        const images = item.images
-
-        getAverageColor(images[0].url).then((color) => {
-            setImageUrl(images[0].url)
-            setBgColor(color)
-        })
-    }, [item.images])
-
-    useEffect(() => {
+    useLayoutEffect(() => {
         const scrollEl = scrollRef.current
         if (!scrollEl) return
 
@@ -60,6 +52,16 @@ export function PlaylistPage({item, contextUser, token}: PlaylistPageProps) {
 
         scrollEl.addEventListener("scroll", updateOpacity)
         scrollEl.addEventListener("scroll", checkSticky)
+
+        const images = item.images
+
+        getAverageColor(images[0].url)
+            .then((color) => {
+                setImageUrl(images[0].url)
+                setBgColor(color)
+                setLoaded(true)
+            })
+            .catch(() => setLoaded(true))
 
         updateOpacity()
         checkSticky()
@@ -125,20 +127,11 @@ export function PlaylistPage({item, contextUser, token}: PlaylistPageProps) {
                         )}
 
                         <div className="flex flex-col gap-2">
-                            <p>
-                                {item.public ? "Public" : "Private"} {item.type}
-                            </p>
+                            <p>{capitalize(item.album_type)}</p>
                             <h1 className={`text-white font-extrabold ${getTitleClass()}`}>{item.name}</h1>
-                            <p className="opacity-50">{item.description}</p>
                             <div className="flex items-center gap-1">
-                                {contextUser.images ? (
-                                    <Image
-                                        src={contextUser.images[0].url}
-                                        alt={contextUser.display_name as string}
-                                        className="rounded-full"
-                                        width={25}
-                                        height={25}
-                                    />
+                                {artist.images ? (
+                                    <Image src={artist.images[0].url} alt={artist.name} className="rounded-full" width={25} height={25} />
                                 ) : (
                                     <div
                                         className="text-white/40 bg-zinc-800 p-2 rounded flex items-center justify-center"
@@ -149,15 +142,11 @@ export function PlaylistPage({item, contextUser, token}: PlaylistPageProps) {
                                         </svg>
                                     </div>
                                 )}
-                                <p className="text-white font-bold">{contextUser.display_name}</p>
+                                <p className="text-white font-bold">{artist.name}</p>
                                 <span className="opacity-70">•</span>
-                                {item.followers.total > 0 && (
-                                    <>
-                                        <p className="opacity-70">{item.followers.total.toLocaleString()} saves</p>
-                                        <span className="opacity-70">•</span>
-                                    </>
-                                )}
-                                <p className="opacity-70">{item.tracks.total} songs</p>
+                                <p className="text-white opacity-70">{new Date(item.release_date).getFullYear()}</p>
+                                <span className="opacity-70">•</span>
+                                <p className="opacity-70">{item.total_tracks} songs</p>
                             </div>
                         </div>
                     </div>
@@ -189,9 +178,6 @@ export function PlaylistPage({item, contextUser, token}: PlaylistPageProps) {
                     >
                         <div className="w-8 text-right opacity-70">#</div>
                         <div className="flex-6 opacity-70">Title</div>
-                        <div className="flex-3 text-sm opacity-70">Album</div>
-                        {!item.public && <div className="flex-3 text-sm opacity-70">Added by</div>}
-                        <div className="flex-3 text-sm opacity-70">Date added</div>
                         <div className="flex-1 justify-end pr-6 flex opacity-70">
                             <svg viewBox="0 0 16 16" height="16" fill="currentColor">
                                 <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8"></path>
@@ -201,14 +187,7 @@ export function PlaylistPage({item, contextUser, token}: PlaylistPageProps) {
                     </div>
 
                     {/* Track List */}
-
-                    <TrackList
-                        type={item.type}
-                        items={item.tracks.items}
-                        token={token}
-                        contextUri={item.uri}
-                        contextIsPublic={item.public as boolean}
-                    />
+                    <TrackList type={item.type} items={item.tracks.items as SimplifiedTrack[]} token={token} contextUri={item.uri} />
                 </div>
             </div>
         </div>

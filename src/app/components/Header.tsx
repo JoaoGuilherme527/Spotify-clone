@@ -3,6 +3,7 @@
 import SpotifyIcon from "@/icons"
 import {PrivateUser} from "@/typings"
 import {usePathname, useRouter} from "next/navigation"
+import {useEffect, useLayoutEffect, useRef, useState} from "react"
 
 interface HeaderProps {
     user: PrivateUser
@@ -12,6 +13,20 @@ export default function Header({user}: HeaderProps) {
     const pathname = usePathname()
     const router = useRouter()
     const regex = /^\/$/
+    const [searchTerm, setSearchTerm] = useState("")
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            if(!searchTerm)return 
+            router.push("/search/"+searchTerm)
+            setSearchTerm("")
+        }, 1000)
+
+        return () => {
+            clearTimeout(timeout)
+        }
+    }, [searchTerm])
+
     return (
         <header className="w-full justify-between flex" style={{height: 72}}>
             <div className="flex px-8 items-center justify-center">
@@ -33,6 +48,8 @@ export default function Header({user}: HeaderProps) {
                             className="outline-0 py-[10px] text-white text-lg w-full "
                             type="text"
                             placeholder="What do you want to play?"
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            value={searchTerm}
                         />
                     </div>
                     <div className="pl-4 border-l-1 border-zinc-50/60">
@@ -42,7 +59,7 @@ export default function Header({user}: HeaderProps) {
                                 router.push("/search")
                             }}
                         >
-                            <SpotifyIcon icon="Browse" color="white" />
+                            <SpotifyIcon icon="Browse" variant={pathname.includes("/search")} color="white" />
                         </button>
                     </div>
                 </div>

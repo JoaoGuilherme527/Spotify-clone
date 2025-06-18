@@ -1,9 +1,9 @@
 "use client"
 
 import {useEffect, useState} from "react"
-import {useRouter} from "next/navigation"
+import {usePathname, useRouter} from "next/navigation"
 import SpotifyIcon from "@/icons"
-import {getAverageColor, PlayContext} from "@/lib/spotifyActions"
+import {capitalize, getAverageColor, PlayContext, truncate} from "@/lib/spotifyActions"
 import {
     SimplifiedAlbum,
     SimplifiedPlaylist,
@@ -41,16 +41,16 @@ interface LibraryItemProps {
 
 type LibraryItem = (SimplifiedAlbum | SimplifiedPlaylist) & {id: string}
 
-const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
-
-const truncate = (text: string, max = 25) => (text.length > max ? `${text.slice(0, max)}...` : text)
 
 function LibraryItemCard({item, token, asideOpen, isHover, setIsHover, onClickNavigate, imageUrl, subtitle, playUris}: LibraryItemProps) {
     const {currentPLaying} = useGlobalContext()
+    const pathname = usePathname()
     const isHovered = isHover === item.id
     return (
         <div
-            className="w-full flex gap-4 hover:bg-white/5 imageHover text-green-500 p-[6px] rounded items-center cursor-pointer"
+            className={`w-full flex gap-4 hover:bg-white/5 imageHover text-green-500 p-[6px] rounded items-center cursor-pointer pr-3 ${
+                pathname.includes(item.id as string) && "bg-white/10"
+            }  `}
             onMouseEnter={() => setIsHover(item.id as string)}
             onMouseLeave={() => setIsHover("")}
         >
@@ -114,7 +114,7 @@ export default function Aside({token, albums, playlists, savedTracks, user}: Asi
 
     const renderLikedSongs = () => (
         <LibraryItemCard
-            item={{id: "liked_songs", name: "Liked Songs", type: "playlist"}}
+            item={{id: "tracks", name: "Liked Songs", type: "playlist"}}
             token={token}
             asideOpen={asideOpen}
             isHover={isHover}
@@ -122,7 +122,7 @@ export default function Aside({token, albums, playlists, savedTracks, user}: Asi
             imageUrl="https://misc.scdn.co/liked-songs/liked-songs-64.png"
             subtitle={`Playlist • ${savedTracks.total} songs`}
             playUris={savedTracks.items.map(({track}: any) => track.uri)}
-            onClickNavigate={() => router.push("/collection/Liked Songs")}
+            onClickNavigate={() => router.push("/collection/tracks")}
         />
     )
 
@@ -226,7 +226,7 @@ export default function Aside({token, albums, playlists, savedTracks, user}: Asi
                         imageUrl={item.images[0]?.url || ""}
                         subtitle={
                             item.type === "album"
-                                ? `Album • ${item.artists.map((a) => a.name).join(", ")}`
+                                ? `${capitalize(item.album_type)} • ${item.artists.map((a) => a.name).join(", ")}`
                                 : `Playlist • ${"owner" in item ? item.owner.display_name : user.display_name}`
                         }
                         onClickNavigate={() => {

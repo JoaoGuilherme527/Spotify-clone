@@ -1,18 +1,16 @@
+import {AlbumPage} from "@/app/components/AlbumPage"
 import {GetAccessToken} from "@/lib/actions"
-import {GetAlbum} from "@/lib/spotifyActions"
+import {GetAlbum, GetArtist} from "@/lib/spotifyActions"
 
 interface Props {
     params: Promise<{id: string}>
 }
 
-export default async function AlbumPage({params}: Props) {
+export default async function Page({params}: Props) {
     const {id} = await params
     const token = await GetAccessToken()
-    const context: any = await GetAlbum(token, id)
+    const context = await GetAlbum(token, id)
+    const artist = await GetArtist(token, context.artists[0].id)
 
-    // Chame aqui sua função que usa o id
-    // como GetAlbumById(id) ou similar
-    // const album = await GetAlbumById(id)
-
-    return <div className="p-4">{context.name}</div>
+    return <AlbumPage item={context} token={token} artist={artist} />
 }

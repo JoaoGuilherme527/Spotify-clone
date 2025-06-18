@@ -21,7 +21,7 @@ export function formatMillisToMinutesSeconds(ms: number): string {
 }
 
 export default function PlayerFooter({token}: {token: string}) {
-    const {setCurrentPlaying, setDeviceId} = useGlobalContext()
+    const {setCurrentPlaying, setDeviceId, setPlayerInstanceContext, setPlayerState} = useGlobalContext()
 
     const [player, setPlayer] = useState<Spotify.Player | null>(null)
     const [isPaused, setIsPaused] = useState(true)
@@ -88,6 +88,7 @@ export default function PlayerFooter({token}: {token: string}) {
             })
 
             setPlayer(playerInstance)
+            setPlayerInstanceContext(playerInstance)
 
             playerInstance.addListener("ready", ({device_id}: Spotify.ReadyEvent) => {
                 setDeviceId(device_id)
@@ -126,6 +127,7 @@ export default function PlayerFooter({token}: {token: string}) {
                 const isSavedData = await response.json()
                 setIsTrackSaved(isSavedData[0])
 
+                setPlayerState(state)
                 setCurrentPlaying({
                     contextUri: state.context.uri as string,
                     paused: state.paused,

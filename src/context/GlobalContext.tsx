@@ -3,6 +3,10 @@
 import React, {createContext, useContext, useState, type ReactNode} from "react"
 
 interface GlobalContextType {
+    playerState: Spotify.WebPlaybackState | undefined
+    setPlayerState: (state: Spotify.WebPlaybackState) => void
+    playerInstanceContext: Spotify.Player | undefined
+    setPlayerInstanceContext: (state: Spotify.Player) => void
     device_id: string
     setDeviceId: (device_id: string) => void
     currentPLaying: {contextUri: string; paused: boolean; trackUri: string}
@@ -30,6 +34,23 @@ export function GlobalContextProvider({children}: GlobalContextProviderProps) {
         trackUri: "",
     })
     const [device_id, setDeviceId] = useState<string>("")
+    const [playerInstanceContext, setPlayerInstanceContext] = useState<Spotify.Player>()
+    const [playerState, setPlayerState] = useState<Spotify.WebPlaybackState>()
 
-    return <GlobalContext.Provider value={{currentPLaying, setCurrentPlaying, device_id, setDeviceId}}>{children}</GlobalContext.Provider>
+    return (
+        <GlobalContext.Provider
+            value={{
+                currentPLaying,
+                setCurrentPlaying,
+                device_id,
+                setDeviceId,
+                playerInstanceContext,
+                setPlayerInstanceContext,
+                playerState,
+                setPlayerState,
+            }}
+        >
+            {children}
+        </GlobalContext.Provider>
+    )
 }
