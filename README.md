@@ -1,34 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Spotify Clone
 
-## Getting Started
+**Spotify Clone** is a web application built with **React**, **TypeScript**, and **Tailwind CSS**. It connects to the official **Spotify Web API** to replicate core features of the Spotify desktop:
 
-First, run the development server:
+* 🎵 **Browse and search** for real albums, playlists, and tracks from Spotify’s catalog
+* ▶️ **Interactive player** with play/pause, skip, track progress, and volume controls
+* 💾 **Manage library** by liking tracks, saving albums, and creating playlists in your Spotify account
+
+> 🔒 **Note:** A **Spotify Premium** subscription is required to stream audio through the Web API.
+
+---
+
+## 📋 Prerequisites
+
+1. **Spotify Developer Account** and a registered application:
+
+   * Visit the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/).
+   * Create an app and copy your **Client ID** and **Client Secret**.
+2. **Spotify Premium** subscription to play tracks via the Web Playback SDK.
+3. [Node.js](https://nodejs.org/) (version 14 or higher)
+4. **Yarn** or **npm** (package manager)
+
+---
+
+## 🔧 Environment Variables
+
+Create a `.env` file in the project root with the following keys:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+CLIENT_ID=YOUR_ID
+CLIENT_SECRET=YOUR_SECRET
+SPOTIFY_CLIENT_ID=YOUR_ID
+SPOTIFY_CLIENT_SECRET=YOUR_SECRET
+SPOTIFY_REDIRECT_URI=http://127.0.0.1:3000/api/spotify/callback
+REDIRECT_URI=http://127.0.0.1:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Adjust `REDIRECT_URI` if you host on a different local domain, but Spotify recomends http://127.0.0.1:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-## Learn More
+## 🚀 Running Locally
 
-To learn more about Next.js, take a look at the following resources:
+1. **Clone this repository**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   ```bash
+   git clone https://github.com/JoaoGuilherme527/Spotify-clone.git
+   cd Spotify-clone
+   ```
+2. **Install dependencies**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   * With Yarn:
 
-## Deploy on Vercel
+     ```bash
+     yarn install
+     ```
+   * With npm:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+     ```bash
+     npm install
+     ```
+3. **Start the development server**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   ```bash
+   yarn start
+   # or
+   npm run start
+   ```
+4. Open [http://localhost:3000](http://localhost:3000) in your browser, and log in with your Spotify account when prompted.
+
+---
+
+## 📦 Building for Production
+
+To create an optimized production build:
+
+```bash
+# With Yarn:
+yarn build
+
+# Or with npm:
+npm run build
+```
+
+The static files will be output to the `build/` directory, ready for deployment.
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
