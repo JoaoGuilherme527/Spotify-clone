@@ -62,9 +62,9 @@ Adjust `REDIRECT_URI` if you host on a different local domain, but Spotify recom
 3. **Start the development server**
 
    ```bash
-   yarn start
+   yarn dev
    # or
-   npm run start
+   npm run dev
    ```
 4. Open [http://localhost:3000](http://localhost:3000) in your browser, and log in with your Spotify account when prompted.
 
